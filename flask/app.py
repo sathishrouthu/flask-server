@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request, render_template_string
+import os
 
 app = Flask(__name__)
 
@@ -44,6 +45,26 @@ def delete_task(index):
     if index < len(tasks):
         tasks.pop(index)
     return home()
+
+@app.route('/get/images/list', methods=['GET'])
+def get_images_list():
+    # Directory where images are stored, relative to the app.py file
+    image_dir = 'images'
+    
+    # Check if the directory exists
+    if not os.path.isdir(image_dir):
+        return jsonify({"error": f"'{image_dir}' directory not found."}), 404
+
+    # List of allowed image extensions
+    allowed_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'}
+
+    try:
+        # List all files in the directory and filter for images
+        image_names = [f for f in os.listdir(image_dir) 
+                       if os.path.isfile(os.path.join(image_dir, f)) and os.path.splitext(f)[1].lower() in allowed_extensions]
+        return jsonify(image_names)
+    except Exception as e:
+        return jsonify({"error": "An error occurred while reading the directory.", "details": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
